@@ -1,0 +1,16 @@
+# /etc/systemd/system/karigarmitra-stats.service
+[Unit]
+Description=KarigarMitra stats API
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/karigarmitra
+Environment=KM_ADMIN_KEY=CHANGE-THIS-TO-YOUR-SECRET
+Environment=KM_DB=/home/ubuntu/karigarmitra/km_stats.db
+Environment=KM_ORIGINS=https://karigarmitra.in,https://www.karigarmitra.in,https://22f1001869.github.io
+ExecStart=/home/ubuntu/karigarmitra/venv/bin/gunicorn -w 2 -b 127.0.0.1:5001 km_stats:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
