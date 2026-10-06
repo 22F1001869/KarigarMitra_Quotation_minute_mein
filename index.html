@@ -7,8 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="KarigarMitra" />
 <link rel="manifest" href="manifest.json" />
-<link rel="icon" href="icons/icon-192.png" />
-<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<!-- Stats server for admin counters. Same domain: "/api/km". Other domain: "https://yourdomain/api/km". Empty "" = off. -->
+<script>window.KM_STATS_API = "/api/km";</script>
 <title>KarigarMitra – Quotation minute mein</title>
 <style>
 :root{--c:#1d4ed8;--cs:rgba(29,78,216,.10);--on:#fff;--cd:#1d4ed8;--hbg:rgba(255,255,255,.16);--bg:#f3f4f6;--card:#fff;--ink:#111827;--mut:#6b7280;--line:#e5e7eb;--red:#dc2626;--green:#16a34a;--r:14px}
@@ -146,6 +149,23 @@ main{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
 #shSave{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;box-shadow:0 10px 24px rgba(16,24,40,.22);border-radius:16px}
 .sheet .foot{border-radius:20px 20px 0 0;box-shadow:0 -6px 20px rgba(16,24,40,.08)}
 .toast{border-radius:14px}
+/* ---- v6 ---- */
+.lc .acts .btn{white-space:nowrap;font-size:13.5px;padding:0 6px}
+.hb.inst{font-size:13px;gap:4px;display:flex;padding:0 10px;background:#fff;color:#111827;box-shadow:0 2px 8px rgba(0,0,0,.18);animation:wig 2.4s ease-in-out infinite}
+.hb.inst.hidden{display:none}
+@keyframes wig{0%,85%,100%{transform:none}90%{transform:scale(1.08)}95%{transform:scale(.97)}}
+@media(max-width:370px){.hb.inst span{display:none}}
+.sws.big{grid-template-columns:repeat(7,1fr);gap:10px}.sws.big .sw{max-width:44px}
+.sw.on{position:relative}.sw.on:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;font-weight:900;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.6)}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:18px}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.howto{background:#f1f5f9;border-radius:14px;padding:10px 12px;margin-bottom:8px;font-size:14px}.howto b{display:block;margin-bottom:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:#fff;border-radius:16px;padding:12px 10px;text-align:center;box-shadow:0 1px 2px rgba(16,24,40,.05),0 6px 16px rgba(16,24,40,.04)}
+.stat b{display:block;font-size:26px;color:var(--cd);line-height:1.1}.stat span{font-size:12px;color:var(--mut);font-weight:700}
+.qbadge{min-width:46px;text-align:center;background:var(--cs);color:var(--cd);border-radius:12px;padding:4px 8px;font-weight:900;font-size:18px;line-height:1.1}
+.qbadge small{display:block;font-size:10px;font-weight:700;opacity:.8}
 </style>
 </head>
 <body>
@@ -153,6 +173,8 @@ main{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
 <header class="hdr">
   <button class="hb hidden" id="backBtn" aria-label="Back">←</button>
   <div class="htitle" id="hTitle">KarigarMitra</div>
+  <button class="hb inst hidden" id="instBtn" aria-label="Install">📲<span data-t="installShort"></span></button>
+  <button class="hb hidden" id="themeBtn" aria-label="Theme">🎨</button>
   <button class="hb lang" id="langBtn" aria-label="Language">🌐<span id="langTag">EN</span></button>
 </header>
 
@@ -293,6 +315,14 @@ main{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
     <button class="btn w" id="installBtn" style="margin-top:8px">📲 <span data-t="install"></span></button>
   </div>
 </section>
+<!-- ============ ADMIN (hidden: tap title 5 times) ============ -->
+<section class="scr" id="s-admin">
+  <div class="stats" id="adTotals"></div>
+  <div class="mut" id="adNote" style="margin:0 2px 10px"></div>
+  <input class="inp" id="adSearch" placeholder="🔍 Search business / owner / phone" style="margin-bottom:10px" />
+  <div id="adList"></div>
+  <div class="g2" style="margin-top:6px"><button class="btn" id="adRefresh">↻ Refresh</button><button class="btn red" id="adLogout">⎋ Logout</button></div>
+</section>
 </main>
 
 <!-- quote bottom bar -->
@@ -336,6 +366,24 @@ main{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
   </div></div>
 </div>
 
+<!-- ============ THEME SHEET ============ -->
+<div class="sheet" id="themeSheet">
+  <div class="sh"><button class="hb" id="thClose">✕</button><span class="t">🎨 <span data-t="theme"></span></span></div>
+  <div class="body">
+    <div class="card"><div class="sec">🌙 <span data-t="themeDark"></span></div><div class="sws big" id="thDark"></div></div>
+    <div class="card"><div class="sec">☀️ <span data-t="themeLight"></span></div><div class="sws big" id="thLight"></div></div>
+    <div class="card"><div class="sec">✏️ <span data-t="themeCustom"></span></div><input type="color" id="thCustom" class="inp" style="height:54px;padding:4px" /></div>
+  </div>
+</div>
+<!-- ============ INSTALL HELP ============ -->
+<div class="modal" id="instModal"><div class="mbox">
+  <img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:18px;display:block;margin:0 auto 8px" />
+  <h3 style="text-align:center;margin:0 0 4px">KarigarMitra</h3>
+  <p class="mut" style="text-align:center;margin:0 0 12px" data-t="instWhy"></p>
+  <div class="howto"><b>🤖 Android (Chrome)</b><span data-t="instAndroid"></span></div>
+  <div class="howto"><b>🍎 iPhone (Safari)</b><span data-t="instIos"></span></div>
+  <button class="btn p w" id="instClose" style="margin-top:10px">OK</button>
+</div></div>
 <div class="toast" id="toast"></div>
 <div class="busy" id="busy">⏳</div>
 
@@ -365,9 +413,9 @@ const store=(k,v)=>{try{localStorage.setItem(PFX+k,JSON.stringify(v));return tru
 
 /* ------------------------------ LANGUAGE ------------------------------ */
 const L={
-en:{chooseTrade:'What work do you do?',chooseTradeSub:'Tap one or more',next:'Next',shopDetails:'Shop details',shopName:'Shop / Company name',shopNamePh:'e.g. Sai Aluminium Works',ownerName:'Your name',phone:'Mobile number',address:'Address',englishTip:'Tip: write shop name in English – it prints on the quotation.',back:'Back',start:'Start',newQuote:'New Quotation',continueQuote:'Continue last quotation',oldQuotes:'Quotations',rateList:'Rate List',myShop:'My Shop',customer:'Customer',custName:'Customer name',siteAddress:'Site / Address',items:'Items',addItem:'Add Item',addAnother:'Add another item',extra:'Extra charges',transport:'Transport',labour:'Labour',fitting:'Fitting',other:'Other',discount:'Discount ₹',gst:'Add GST',advance:'Advance ₹',grandTotal:'Grand Total',balance:'Balance',moreOptions:'More options',noteCust:'Note for customer',quoteNo:'Quotation No.',date:'Date',terms:'Terms (one per line)',search:'🔍 Search name or phone',rateHelp:'Save items you make often with rate. Next time tap and add.',addRate:'Add item to rate list',uploadLogo:'Logo',myWork:'My work (tap to change)',moreShop:'GST, colour, terms, bank',gstin:'GST number',color:'Colour',bank:'Bank / UPI details',saveShop:'Save',allShops:'My shops',addShop:'Add another shop',backupTitle:'Backup',backupHelp:'Data is only on this phone. Save a backup file sometimes.',backup:'Backup',restore:'Restore',install:'Install app on phone',itemName:'Item name (English prints on PDF)',width:'Width',height:'Height',length:'Length',weight:'Weight (Kg)',pieces:'Pieces',rate:'Rate ₹',description:'Details (any language / 🎤 speak)',saveRate:'Save in rate list',amount:'Amount',add:'Add',update:'Update',send:'Send',download:'Download',perPiece:'Piece',perSqft:'Sq.ft',perRft:'Running ft',perKg:'Kg',lumpsum:'Fixed',noItems:'No items yet – tap ➕ Add Item',needItem:'Add at least one item',needName:'Write item name',needRate:'Write rate',needSize:'Write size',needShop:'Write shop name',needTrade:'Select at least one work',edit:'Edit',del:'Delete',copy:'Copy',confirmDel:'Delete this?',noQuotes:'No quotations yet',noRates:'Rate list is empty',subTotal:'Sub total',roundOff:'Round off',taxable:'Taxable amount',useShop:'Use',active:'In use',confirmNew:'Start new quotation? Current one is not saved.',listening:'Listening… speak',noMic:'Voice typing not available',storageFull:'Phone storage full. Take backup & delete old quotations.',recent:'Recent',itemAdded:'Item added ✔',itemUpdated:'Item updated ✔',shopSaved:'Saved ✔',saved:'Saved ✔',pdfReady:'PDF downloaded ✔',restored:'Backup restored ✔',badFile:'Wrong backup file',installTip:'Browser menu ⋮ → "Add to Home screen"',editItem:'Edit item',newItem:'Add item',rateItem:'Rate list item',items_n:'items',chargeLabel:'Name',walkin:'Customer',sqftOf:'sq.ft',rftOf:'running ft',addWork:'Add my work',workName:'Type your work name',mine:'My rates',all:'All',area:'Area'},
-hi:{chooseTrade:'आप कौन सा काम करते हैं?',chooseTradeSub:'एक या ज़्यादा चुनें',next:'आगे',shopDetails:'दुकान की जानकारी',shopName:'दुकान / कंपनी का नाम',shopNamePh:'जैसे Sai Aluminium Works',ownerName:'आपका नाम',phone:'मोबाइल नंबर',address:'पता',englishTip:'सुझाव: दुकान का नाम English में लिखें – यह कोटेशन पर छपेगा।',back:'पीछे',start:'शुरू करें',newQuote:'नया कोटेशन',continueQuote:'पिछला कोटेशन जारी रखें',oldQuotes:'कोटेशन',rateList:'रेट लिस्ट',myShop:'मेरी दुकान',customer:'ग्राहक',custName:'ग्राहक का नाम',siteAddress:'साइट / पता',items:'आइटम',addItem:'आइटम जोड़ें',addAnother:'एक और आइटम जोड़ें',extra:'अतिरिक्त खर्च',transport:'ट्रांसपोर्ट',labour:'मजदूरी',fitting:'फिटिंग',other:'अन्य',discount:'छूट ₹',gst:'GST जोड़ें',advance:'एडवांस ₹',grandTotal:'कुल रकम',balance:'बाकी',moreOptions:'और विकल्प',noteCust:'ग्राहक के लिए नोट',quoteNo:'कोटेशन नंबर',date:'तारीख',terms:'शर्तें (हर लाइन में एक)',search:'🔍 नाम या फ़ोन से खोजें',rateHelp:'अक्सर बनने वाले आइटम का रेट सेव करें। अगली बार बस दबाएं।',addRate:'रेट लिस्ट में जोड़ें',uploadLogo:'लोगो',myWork:'मेरा काम (बदलने के लिए दबाएं)',moreShop:'GST, रंग, शर्तें, बैंक',gstin:'GST नंबर',color:'रंग',bank:'बैंक / UPI जानकारी',saveShop:'सेव करें',allShops:'मेरी दुकानें',addShop:'दूसरी दुकान जोड़ें',backupTitle:'बैकअप',backupHelp:'डेटा सिर्फ इसी फ़ोन में है। कभी-कभी बैकअप फ़ाइल सेव करें।',backup:'बैकअप',restore:'वापस लाएं',install:'फ़ोन में ऐप इंस्टॉल करें',itemName:'आइटम का नाम (English PDF पर छपेगा)',width:'चौड़ाई',height:'ऊंचाई',length:'लंबाई',weight:'वज़न (किलो)',pieces:'नग',rate:'रेट ₹',description:'विवरण (किसी भी भाषा में / 🎤 बोलें)',saveRate:'रेट लिस्ट में सेव करें',amount:'रकम',add:'जोड़ें',update:'बदलें',send:'भेजें',download:'डाउनलोड',perPiece:'नग',perSqft:'स्क्वे.फुट',perRft:'रनिंग फुट',perKg:'किलो',lumpsum:'फिक्स',noItems:'अभी कोई आइटम नहीं – ➕ आइटम जोड़ें दबाएं',needItem:'कम से कम एक आइटम जोड़ें',needName:'आइटम का नाम लिखें',needRate:'रेट लिखें',needSize:'नाप लिखें',needShop:'दुकान का नाम लिखें',needTrade:'कम से कम एक काम चुनें',edit:'बदलें',del:'हटाएं',copy:'कॉपी',confirmDel:'क्या हटाना है?',noQuotes:'अभी कोई कोटेशन नहीं',noRates:'रेट लिस्ट खाली है',subTotal:'उप-योग',roundOff:'राउंड ऑफ',taxable:'टैक्स योग्य रकम',useShop:'चुनें',active:'चालू',confirmNew:'नया कोटेशन शुरू करें? अभी वाला सेव नहीं है।',listening:'सुन रहा है… बोलिए',noMic:'बोलकर लिखना उपलब्ध नहीं',storageFull:'फ़ोन मेमोरी भर गई। बैकअप लें और पुराने कोटेशन हटाएं।',recent:'हाल के',itemAdded:'आइटम जुड़ गया ✔',itemUpdated:'आइटम बदल गया ✔',shopSaved:'सेव हो गया ✔',saved:'सेव हो गया ✔',pdfReady:'PDF डाउनलोड हो गया ✔',restored:'बैकअप वापस आ गया ✔',badFile:'गलत बैकअप फ़ाइल',installTip:'ब्राउज़र मेनू ⋮ → "Add to Home screen"',editItem:'आइटम बदलें',newItem:'आइटम जोड़ें',rateItem:'रेट लिस्ट आइटम',items_n:'आइटम',chargeLabel:'नाम',walkin:'ग्राहक',sqftOf:'स्क्वे.फुट',rftOf:'रनिंग फुट',addWork:'अपना काम जोड़ें',workName:'अपने काम का नाम लिखें',mine:'मेरे रेट',all:'सभी',area:'क्षेत्रफल'},
-mr:{chooseTrade:'तुम्ही कोणते काम करता?',chooseTradeSub:'एक किंवा जास्त निवडा',next:'पुढे',shopDetails:'दुकानाची माहिती',shopName:'दुकान / कंपनीचे नाव',shopNamePh:'उदा. Sai Aluminium Works',ownerName:'तुमचे नाव',phone:'मोबाईल नंबर',address:'पत्ता',englishTip:'टीप: दुकानाचे नाव English मध्ये लिहा – ते कोटेशनवर छापले जाईल.',back:'मागे',start:'सुरू करा',newQuote:'नवीन कोटेशन',continueQuote:'मागील कोटेशन चालू ठेवा',oldQuotes:'कोटेशन',rateList:'रेट लिस्ट',myShop:'माझे दुकान',customer:'ग्राहक',custName:'ग्राहकाचे नाव',siteAddress:'साईट / पत्ता',items:'आयटम',addItem:'आयटम जोडा',addAnother:'आणखी आयटम जोडा',extra:'अतिरिक्त खर्च',transport:'वाहतूक',labour:'मजुरी',fitting:'फिटिंग',other:'इतर',discount:'सूट ₹',gst:'GST जोडा',advance:'ॲडव्हान्स ₹',grandTotal:'एकूण रक्कम',balance:'बाकी',moreOptions:'आणखी पर्याय',noteCust:'ग्राहकासाठी टीप',quoteNo:'कोटेशन क्रमांक',date:'तारीख',terms:'अटी (प्रत्येक ओळीत एक)',search:'🔍 नाव किंवा फोनने शोधा',rateHelp:'नेहमीच्या आयटमचा दर सेव्ह करा. पुढच्या वेळी फक्त दाबा.',addRate:'रेट लिस्टमध्ये जोडा',uploadLogo:'लोगो',myWork:'माझे काम (बदलण्यासाठी दाबा)',moreShop:'GST, रंग, अटी, बँक',gstin:'GST क्रमांक',color:'रंग',bank:'बँक / UPI माहिती',saveShop:'सेव्ह करा',allShops:'माझी दुकाने',addShop:'दुसरे दुकान जोडा',backupTitle:'बॅकअप',backupHelp:'डेटा फक्त याच फोनमध्ये आहे. अधूनमधून बॅकअप फाइल सेव्ह करा.',backup:'बॅकअप',restore:'परत आणा',install:'फोनमध्ये ॲप इंस्टॉल करा',itemName:'आयटमचे नाव (English PDF वर छापले जाईल)',width:'रुंदी',height:'उंची',length:'लांबी',weight:'वजन (किलो)',pieces:'नग',rate:'दर ₹',description:'तपशील (कोणत्याही भाषेत / 🎤 बोला)',saveRate:'रेट लिस्टमध्ये सेव्ह करा',amount:'रक्कम',add:'जोडा',update:'बदला',send:'पाठवा',download:'डाउनलोड',perPiece:'नग',perSqft:'चौ.फूट',perRft:'रनिंग फूट',perKg:'किलो',lumpsum:'ठराविक',noItems:'अजून आयटम नाही – ➕ आयटम जोडा दाबा',needItem:'किमान एक आयटम जोडा',needName:'आयटमचे नाव लिहा',needRate:'दर लिहा',needSize:'माप लिहा',needShop:'दुकानाचे नाव लिहा',needTrade:'किमान एक काम निवडा',edit:'बदला',del:'काढा',copy:'कॉपी',confirmDel:'हे काढायचे का?',noQuotes:'अजून कोटेशन नाहीत',noRates:'रेट लिस्ट रिकामी आहे',subTotal:'उप-एकूण',roundOff:'राउंड ऑफ',taxable:'करपात्र रक्कम',useShop:'निवडा',active:'चालू',confirmNew:'नवीन कोटेशन सुरू करायचे? सध्याचे सेव्ह झालेले नाही.',listening:'ऐकत आहे… बोला',noMic:'बोलून लिहिण्याची सोय नाही',storageFull:'फोन मेमरी भरली. बॅकअप घ्या आणि जुने कोटेशन काढा.',recent:'अलीकडील',itemAdded:'आयटम जोडला ✔',itemUpdated:'आयटम बदलला ✔',shopSaved:'सेव्ह झाले ✔',saved:'सेव्ह झाले ✔',pdfReady:'PDF डाउनलोड झाला ✔',restored:'बॅकअप परत आला ✔',badFile:'चुकीची बॅकअप फाइल',installTip:'ब्राउझर मेनू ⋮ → "Add to Home screen"',editItem:'आयटम बदला',newItem:'आयटम जोडा',rateItem:'रेट लिस्ट आयटम',items_n:'आयटम',chargeLabel:'नाव',walkin:'ग्राहक',sqftOf:'चौ.फूट',rftOf:'रनिंग फूट',addWork:'माझे काम जोडा',workName:'तुमच्या कामाचे नाव लिहा',mine:'माझे दर',all:'सर्व',area:'क्षेत्रफळ'}
+en:{chooseTrade:'What work do you do?',chooseTradeSub:'Tap one or more',next:'Next',shopDetails:'Shop details',shopName:'Shop / Company name',shopNamePh:'e.g. Sai Aluminium Works',ownerName:'Your name',phone:'Mobile number',address:'Address',englishTip:'Tip: write shop name in English – it prints on the quotation.',back:'Back',start:'Start',newQuote:'New Quotation',continueQuote:'Continue last quotation',oldQuotes:'Quotations',rateList:'Rate List',myShop:'My Shop',customer:'Customer',custName:'Customer name',siteAddress:'Site / Address',items:'Items',addItem:'Add Item',addAnother:'Add another item',extra:'Extra charges',transport:'Transport',labour:'Labour',fitting:'Fitting',other:'Other',discount:'Discount ₹',gst:'Add GST',advance:'Advance ₹',grandTotal:'Grand Total',balance:'Balance',moreOptions:'More options',noteCust:'Note for customer',quoteNo:'Quotation No.',date:'Date',terms:'Terms (one per line)',search:'🔍 Search name or phone',rateHelp:'Save items you make often with rate. Next time tap and add.',addRate:'Add item to rate list',uploadLogo:'Logo',myWork:'My work (tap to change)',moreShop:'GST, colour, terms, bank',gstin:'GST number',color:'Colour',bank:'Bank / UPI details',saveShop:'Save',allShops:'My shops',addShop:'Add another shop',backupTitle:'Backup',backupHelp:'Data is only on this phone. Save a backup file sometimes.',backup:'Backup',restore:'Restore',install:'Install app on phone',itemName:'Item name (English prints on PDF)',width:'Width',height:'Height',length:'Length',weight:'Weight (Kg)',pieces:'Pieces',rate:'Rate ₹',description:'Details (any language / 🎤 speak)',saveRate:'Save in rate list',amount:'Amount',add:'Add',update:'Update',send:'Send',download:'Download',perPiece:'Piece',perSqft:'Sq.ft',perRft:'Running ft',perKg:'Kg',lumpsum:'Fixed',noItems:'No items yet – tap ➕ Add Item',needItem:'Add at least one item',needName:'Write item name',needRate:'Write rate',needSize:'Write size',needShop:'Write shop name',needTrade:'Select at least one work',edit:'Edit',del:'Delete',copy:'Copy',confirmDel:'Delete this?',noQuotes:'No quotations yet',noRates:'Rate list is empty',subTotal:'Sub total',roundOff:'Round off',taxable:'Taxable amount',useShop:'Use',active:'In use',confirmNew:'Start new quotation? Current one is not saved.',listening:'Listening… speak',noMic:'Voice typing not available',storageFull:'Phone storage full. Take backup & delete old quotations.',recent:'Recent',itemAdded:'Item added ✔',itemUpdated:'Item updated ✔',shopSaved:'Saved ✔',saved:'Saved ✔',pdfReady:'PDF downloaded ✔',restored:'Backup restored ✔',badFile:'Wrong backup file',installTip:'Browser menu ⋮ → "Add to Home screen"',editItem:'Edit item',newItem:'Add item',rateItem:'Rate list item',items_n:'items',chargeLabel:'Name',walkin:'Customer',sqftOf:'sq.ft',rftOf:'running ft',addWork:'Add my work',workName:'Type your work name',mine:'My rates',all:'All',area:'Area',installShort:'Install',instWhy:'Install the app – opens fast, works without internet.',instAndroid:'Tap ⋮ menu (top right) → "Install app" or "Add to Home screen".',instIos:'Tap Share ⬆ (bottom) → "Add to Home Screen" → Add.',theme:'Theme colour',themeDark:'Dark colours',themeLight:'Light colours',themeCustom:'Any colour',themeSaved:'Theme changed ✔',installed:'App installed ✔'},
+hi:{chooseTrade:'आप कौन सा काम करते हैं?',chooseTradeSub:'एक या ज़्यादा चुनें',next:'आगे',shopDetails:'दुकान की जानकारी',shopName:'दुकान / कंपनी का नाम',shopNamePh:'जैसे Sai Aluminium Works',ownerName:'आपका नाम',phone:'मोबाइल नंबर',address:'पता',englishTip:'सुझाव: दुकान का नाम English में लिखें – यह कोटेशन पर छपेगा।',back:'पीछे',start:'शुरू करें',newQuote:'नया कोटेशन',continueQuote:'पिछला कोटेशन जारी रखें',oldQuotes:'कोटेशन',rateList:'रेट लिस्ट',myShop:'मेरी दुकान',customer:'ग्राहक',custName:'ग्राहक का नाम',siteAddress:'साइट / पता',items:'आइटम',addItem:'आइटम जोड़ें',addAnother:'एक और आइटम जोड़ें',extra:'अतिरिक्त खर्च',transport:'ट्रांसपोर्ट',labour:'मजदूरी',fitting:'फिटिंग',other:'अन्य',discount:'छूट ₹',gst:'GST जोड़ें',advance:'एडवांस ₹',grandTotal:'कुल रकम',balance:'बाकी',moreOptions:'और विकल्प',noteCust:'ग्राहक के लिए नोट',quoteNo:'कोटेशन नंबर',date:'तारीख',terms:'शर्तें (हर लाइन में एक)',search:'🔍 नाम या फ़ोन से खोजें',rateHelp:'अक्सर बनने वाले आइटम का रेट सेव करें। अगली बार बस दबाएं।',addRate:'रेट लिस्ट में जोड़ें',uploadLogo:'लोगो',myWork:'मेरा काम (बदलने के लिए दबाएं)',moreShop:'GST, रंग, शर्तें, बैंक',gstin:'GST नंबर',color:'रंग',bank:'बैंक / UPI जानकारी',saveShop:'सेव करें',allShops:'मेरी दुकानें',addShop:'दूसरी दुकान जोड़ें',backupTitle:'बैकअप',backupHelp:'डेटा सिर्फ इसी फ़ोन में है। कभी-कभी बैकअप फ़ाइल सेव करें।',backup:'बैकअप',restore:'वापस लाएं',install:'फ़ोन में ऐप इंस्टॉल करें',itemName:'आइटम का नाम (English PDF पर छपेगा)',width:'चौड़ाई',height:'ऊंचाई',length:'लंबाई',weight:'वज़न (किलो)',pieces:'नग',rate:'रेट ₹',description:'विवरण (किसी भी भाषा में / 🎤 बोलें)',saveRate:'रेट लिस्ट में सेव करें',amount:'रकम',add:'जोड़ें',update:'बदलें',send:'भेजें',download:'डाउनलोड',perPiece:'नग',perSqft:'स्क्वे.फुट',perRft:'रनिंग फुट',perKg:'किलो',lumpsum:'फिक्स',noItems:'अभी कोई आइटम नहीं – ➕ आइटम जोड़ें दबाएं',needItem:'कम से कम एक आइटम जोड़ें',needName:'आइटम का नाम लिखें',needRate:'रेट लिखें',needSize:'नाप लिखें',needShop:'दुकान का नाम लिखें',needTrade:'कम से कम एक काम चुनें',edit:'बदलें',del:'हटाएं',copy:'कॉपी',confirmDel:'क्या हटाना है?',noQuotes:'अभी कोई कोटेशन नहीं',noRates:'रेट लिस्ट खाली है',subTotal:'उप-योग',roundOff:'राउंड ऑफ',taxable:'टैक्स योग्य रकम',useShop:'चुनें',active:'चालू',confirmNew:'नया कोटेशन शुरू करें? अभी वाला सेव नहीं है।',listening:'सुन रहा है… बोलिए',noMic:'बोलकर लिखना उपलब्ध नहीं',storageFull:'फ़ोन मेमोरी भर गई। बैकअप लें और पुराने कोटेशन हटाएं।',recent:'हाल के',itemAdded:'आइटम जुड़ गया ✔',itemUpdated:'आइटम बदल गया ✔',shopSaved:'सेव हो गया ✔',saved:'सेव हो गया ✔',pdfReady:'PDF डाउनलोड हो गया ✔',restored:'बैकअप वापस आ गया ✔',badFile:'गलत बैकअप फ़ाइल',installTip:'ब्राउज़र मेनू ⋮ → "Add to Home screen"',editItem:'आइटम बदलें',newItem:'आइटम जोड़ें',rateItem:'रेट लिस्ट आइटम',items_n:'आइटम',chargeLabel:'नाम',walkin:'ग्राहक',sqftOf:'स्क्वे.फुट',rftOf:'रनिंग फुट',addWork:'अपना काम जोड़ें',workName:'अपने काम का नाम लिखें',mine:'मेरे रेट',all:'सभी',area:'क्षेत्रफल',installShort:'इंस्टॉल',instWhy:'ऐप इंस्टॉल करें – जल्दी खुलेगा, बिना इंटरनेट भी चलेगा।',instAndroid:'⋮ मेनू (ऊपर दाएं) → "Install app" या "Add to Home screen" दबाएं।',instIos:'Share ⬆ (नीचे) → "Add to Home Screen" → Add दबाएं।',theme:'थीम रंग',themeDark:'गहरे रंग',themeLight:'हल्के रंग',themeCustom:'कोई भी रंग',themeSaved:'थीम बदल गई ✔',installed:'ऐप इंस्टॉल हो गया ✔'},
+mr:{chooseTrade:'तुम्ही कोणते काम करता?',chooseTradeSub:'एक किंवा जास्त निवडा',next:'पुढे',shopDetails:'दुकानाची माहिती',shopName:'दुकान / कंपनीचे नाव',shopNamePh:'उदा. Sai Aluminium Works',ownerName:'तुमचे नाव',phone:'मोबाईल नंबर',address:'पत्ता',englishTip:'टीप: दुकानाचे नाव English मध्ये लिहा – ते कोटेशनवर छापले जाईल.',back:'मागे',start:'सुरू करा',newQuote:'नवीन कोटेशन',continueQuote:'मागील कोटेशन चालू ठेवा',oldQuotes:'कोटेशन',rateList:'रेट लिस्ट',myShop:'माझे दुकान',customer:'ग्राहक',custName:'ग्राहकाचे नाव',siteAddress:'साईट / पत्ता',items:'आयटम',addItem:'आयटम जोडा',addAnother:'आणखी आयटम जोडा',extra:'अतिरिक्त खर्च',transport:'वाहतूक',labour:'मजुरी',fitting:'फिटिंग',other:'इतर',discount:'सूट ₹',gst:'GST जोडा',advance:'ॲडव्हान्स ₹',grandTotal:'एकूण रक्कम',balance:'बाकी',moreOptions:'आणखी पर्याय',noteCust:'ग्राहकासाठी टीप',quoteNo:'कोटेशन क्रमांक',date:'तारीख',terms:'अटी (प्रत्येक ओळीत एक)',search:'🔍 नाव किंवा फोनने शोधा',rateHelp:'नेहमीच्या आयटमचा दर सेव्ह करा. पुढच्या वेळी फक्त दाबा.',addRate:'रेट लिस्टमध्ये जोडा',uploadLogo:'लोगो',myWork:'माझे काम (बदलण्यासाठी दाबा)',moreShop:'GST, रंग, अटी, बँक',gstin:'GST क्रमांक',color:'रंग',bank:'बँक / UPI माहिती',saveShop:'सेव्ह करा',allShops:'माझी दुकाने',addShop:'दुसरे दुकान जोडा',backupTitle:'बॅकअप',backupHelp:'डेटा फक्त याच फोनमध्ये आहे. अधूनमधून बॅकअप फाइल सेव्ह करा.',backup:'बॅकअप',restore:'परत आणा',install:'फोनमध्ये ॲप इंस्टॉल करा',itemName:'आयटमचे नाव (English PDF वर छापले जाईल)',width:'रुंदी',height:'उंची',length:'लांबी',weight:'वजन (किलो)',pieces:'नग',rate:'दर ₹',description:'तपशील (कोणत्याही भाषेत / 🎤 बोला)',saveRate:'रेट लिस्टमध्ये सेव्ह करा',amount:'रक्कम',add:'जोडा',update:'बदला',send:'पाठवा',download:'डाउनलोड',perPiece:'नग',perSqft:'चौ.फूट',perRft:'रनिंग फूट',perKg:'किलो',lumpsum:'ठराविक',noItems:'अजून आयटम नाही – ➕ आयटम जोडा दाबा',needItem:'किमान एक आयटम जोडा',needName:'आयटमचे नाव लिहा',needRate:'दर लिहा',needSize:'माप लिहा',needShop:'दुकानाचे नाव लिहा',needTrade:'किमान एक काम निवडा',edit:'बदला',del:'काढा',copy:'कॉपी',confirmDel:'हे काढायचे का?',noQuotes:'अजून कोटेशन नाहीत',noRates:'रेट लिस्ट रिकामी आहे',subTotal:'उप-एकूण',roundOff:'राउंड ऑफ',taxable:'करपात्र रक्कम',useShop:'निवडा',active:'चालू',confirmNew:'नवीन कोटेशन सुरू करायचे? सध्याचे सेव्ह झालेले नाही.',listening:'ऐकत आहे… बोला',noMic:'बोलून लिहिण्याची सोय नाही',storageFull:'फोन मेमरी भरली. बॅकअप घ्या आणि जुने कोटेशन काढा.',recent:'अलीकडील',itemAdded:'आयटम जोडला ✔',itemUpdated:'आयटम बदलला ✔',shopSaved:'सेव्ह झाले ✔',saved:'सेव्ह झाले ✔',pdfReady:'PDF डाउनलोड झाला ✔',restored:'बॅकअप परत आला ✔',badFile:'चुकीची बॅकअप फाइल',installTip:'ब्राउझर मेनू ⋮ → "Add to Home screen"',editItem:'आयटम बदला',newItem:'आयटम जोडा',rateItem:'रेट लिस्ट आयटम',items_n:'आयटम',chargeLabel:'नाव',walkin:'ग्राहक',sqftOf:'चौ.फूट',rftOf:'रनिंग फूट',addWork:'माझे काम जोडा',workName:'तुमच्या कामाचे नाव लिहा',mine:'माझे दर',all:'सर्व',area:'क्षेत्रफळ',installShort:'इंस्टॉल',instWhy:'ॲप इंस्टॉल करा – पटकन उघडेल, इंटरनेटशिवायही चालेल.',instAndroid:'⋮ मेनू (वर उजवीकडे) → "Install app" किंवा "Add to Home screen" दाबा.',instIos:'Share ⬆ (खाली) → "Add to Home Screen" → Add दाबा.',theme:'थीम रंग',themeDark:'गडद रंग',themeLight:'फिकट रंग',themeCustom:'कोणताही रंग',themeSaved:'थीम बदलली ✔',installed:'ॲप इंस्टॉल झाले ✔'}
 };
 let lang=load('lang',null);
 const t=k=>(L[lang||'en']&&L[lang||'en'][k])??L.en[k]??k;
@@ -393,8 +441,9 @@ const trade=id=>allTrades().find(x=>x.id===id)||TRADES[TRADES.length-1];
 const tn=o=>o[lang||'en']||o.en;
 const MODES={nos:{ic:'🔢',t:'perPiece',u:'Nos'},sqft:{ic:'⬛',t:'perSqft',u:'Sq.ft'},rft:{ic:'📏',t:'perRft',u:'R.ft'},kg:{ic:'⚖️',t:'perKg',u:'Kg'},lump:{ic:'💰',t:'lumpsum',u:'Job'}};
 const MU={ft:1,inch:1/12,mm:1/304.8,cm:1/30.48,m:3.28084};
-const COLORS=['#1d4ed8','#0f766e','#15803d','#b45309','#c2410c','#be123c','#7c3aed','#334155',
-  /* light shades */ '#bfdbfe','#a5f3fc','#bbf7d0','#d9f99d','#fef08a','#fed7aa','#fecaca','#fbcfe8','#ddd6fe','#e2e8f0'];
+const DARK_COLORS=['#1d4ed8','#1e40af','#4338ca','#6d28d9','#7c3aed','#7e22ce','#a21caf','#be185d','#be123c','#b91c1c','#c2410c','#b45309','#a16207','#4d7c0f','#15803d','#047857','#0f766e','#0e7490','#0369a1','#334155','#1f2937'];
+const LIGHT_COLORS=['#bfdbfe','#c7d2fe','#ddd6fe','#e9d5ff','#f5d0fe','#fbcfe8','#fecdd3','#fecaca','#fed7aa','#fde68a','#fef08a','#d9f99d','#bbf7d0','#a7f3d0','#99f6e4','#a5f3fc','#bae6fd','#e2e8f0','#e7e5e4','#f1f5f9','#fff1f2'];
+const COLORS=[...DARK_COLORS,...LIGHT_COLORS];
 const DEFAULT_TERMS='Rates are valid for 15 days from the date of quotation.\n50% advance with order, balance on completion of work.\nAny extra work will be charged separately.\nFinal bill as per actual measurement at site.';
 
 /* ---- reusable multi-select trade picker ---- */
@@ -442,13 +491,14 @@ function calcQuote(q){const rows=q.items.map(it=>({...it,...calcItem(it)}));cons
 function totalRows(c){const r=[['subTotal','Sub Total',c.sub]];c.charges.forEach(x=>r.push([null,x.label,x.amount]));if(c.disc) r.push(['discount','Less: Discount',-c.disc]);if(c.tax.length){r.push(['taxable','Taxable Amount',c.taxable]);c.tax.forEach(x=>r.push([null,x[0],x[1]]))}if(c.round) r.push(['roundOff','Round Off',c.round]);return r}
 
 /* ------------------------------ NAVIGATION ------------------------------ */
-const TITLES={quote:'newQuote',saved:'oldQuotes',rates:'rateList',shop:'myShop'};
+const TITLES={quote:'newQuote',saved:'oldQuotes',rates:'rateList',shop:'myShop',admin:'Admin'};
 function go(s,push=true){curScreen=s;document.querySelectorAll('.scr').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));
   $('backBtn').classList.toggle('hidden',s==='home'||s==='onboard'||(s==='onboard'));$('qBar').classList.toggle('hidden',s!=='quote');
   $('hTitle').textContent=s==='home'?shop().name:s==='onboard'?'KarigarMitra':t(TITLES[s]);
-  if(s==='home') renderHome();if(s==='saved') renderSaved();if(s==='rates') renderRates();if(s==='shop') renderShopScreen();if(s==='quote') renderQuote();
+  if(s==='home') renderHome();if(s==='saved') renderSaved();if(s==='rates') renderRates();if(s==='shop') renderShopScreen();if(s==='quote') renderQuote();if(s==='admin') renderAdmin();
+  $('themeBtn').classList.toggle('hidden',s==='onboard'||!shops.length);
   if(push&&s!=='home'&&s!=='onboard') history.pushState({s},'');window.scrollTo(0,0)}
-window.addEventListener('popstate',()=>{if($('itemSheet').classList.contains('on')){closeSheet();history.pushState({s:curScreen},'');return}if(curScreen==='onboard'&&shops.length){go('home',false);return}if(curScreen!=='home'&&curScreen!=='onboard') go('home',false)});
+window.addEventListener('popstate',()=>{if($('themeSheet').classList.contains('on')){closeTheme();return}if($('instModal').classList.contains('on')){$('instModal').classList.remove('on');return}if($('itemSheet').classList.contains('on')){closeSheet();history.pushState({s:curScreen},'');return}if(curScreen==='onboard'&&shops.length){go('home',false);return}if(curScreen!=='home'&&curScreen!=='onboard') go('home',false)});
 function openSheet(){$('itemSheet').classList.add('on');document.body.style.overflow='hidden'}
 function closeSheet(){$('itemSheet').classList.remove('on');document.body.style.overflow=''}
 
@@ -457,7 +507,7 @@ function showOb(step){['ob1','ob2','ob3'].forEach((id,i)=>$(id).classList.toggle
 function startAddShop(){obMode='add';obTrades=[...shop().trades];['obName','obAddr'].forEach(id=>$(id).value='');$('obOwner').value=shop().owner||'';$('obPhone').value=shop().phone||'';showOb(2)}
 function finishOb(){const name=$('obName').value.trim();if(!name){toast(t('needShop'));$('obName').focus();return}
   const s=newShop({name,owner:$('obOwner').value.trim(),phone:$('obPhone').value.trim(),address:$('obAddr').value.trim(),trades:obTrades.length?[...obTrades]:['other'],prefix:initials(name),color:COLORS[shops.length%COLORS.length]});
-  shops.push(s);store('shops',shops);activeId=s.id;store('active',activeId);Q=null;applyBrand();go('home',false)}
+  shops.push(s);store('shops',shops);activeId=s.id;store('active',activeId);Q=null;applyBrand();track(shopEvent('register',s));go('home',false)}
 
 /* ------------------------------ BRAND / HOME ------------------------------ */
 function isLight(h){const [r,g,b]=hexRgb(h).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*r+.7152*g+.0722*b>.45}
@@ -549,8 +599,9 @@ function voice(btn){if(!SRec){toast(t('noMic'));return}const target=$(btn.datase
 
 /* ------------------------------ SAVE / LIST ------------------------------ */
 function saveQuote(){if(!Q.items.length){toast(t('needItem'));return false}const s=shop();
-  if(!Q.id){Q.id=uid();if(Q.no===nextNo(s)){s.counter=(n(s.counter)||1)+1;store('shops',shops)}}
+  const isNew=!Q.id;if(!Q.id){Q.id=uid();if(Q.no===nextNo(s)){s.counter=(n(s.counter)||1)+1;store('shops',shops)}}
   Q.savedAt=new Date().toISOString();Q.total=calcQuote(Q).grand;Q.shopId=activeId;
+  track({type:'quote',shop_id:activeId,quote_id:Q.id,total:Q.total,...(isNew?{}:{edit:1})});
   const i=quotes.findIndex(x=>x.id===Q.id);if(i>-1) quotes[i]=clone(Q);else quotes.unshift(clone(Q));if(!store('quotes',quotes)) return false;
   if(Q.cust.name){const ex=custs.find(c=>c.shopId===activeId&&c.name.toLowerCase()===Q.cust.name.toLowerCase());if(ex) Object.assign(ex,{phone:Q.cust.phone,addr:Q.cust.addr});else custs.push({id:uid(),shopId:activeId,...Q.cust});store('custs',custs)}
   saveDraft();$('hTitle').textContent=Q.no;return true}
@@ -582,7 +633,7 @@ function renderLogoPrev(name){$('shLogoPrev').innerHTML=shopLogo.logo?`<img src=
 function saveShopForm(){const s=shops.find(x=>x.id===editShopId);if(!s) return;const name=$('shName').value.trim();if(!name){toast(t('needShop'));$('shName').focus();return}
   if(!shTradesSel.length){toast(t('needTrade'));return}
   Object.assign(s,{name,owner:$('shOwner').value.trim(),trades:[...shTradesSel],phone:$('shPhone').value.trim(),address:$('shAddr').value.trim(),gstin:$('shGstin').value.trim().toUpperCase(),color:$('shColors').dataset.val||s.color,terms:$('shTerms').value,bank:$('shBank').value,logo:shopLogo.logo||'',logoW:shopLogo.w||0,logoH:shopLogo.h||0});
-  store('shops',shops);applyBrand();toast(t('shopSaved'));if(history.state&&history.state.s==='shop') history.back();else go('home',false)}
+  store('shops',shops);applyBrand();track(shopEvent('update',s));toast(t('shopSaved'));if(history.state&&history.state.s==='shop') history.back();else go('home',false)}
 window.useShop=id=>{editShopId=id;switchShop(id)};
 window.editShop=id=>{editShopId=id;renderShopScreen();window.scrollTo({top:0,behavior:'smooth'})};
 window.delShop=id=>{const s=shops.find(x=>x.id===id);if(!s||!confirm(t('confirmDel')+'\n'+s.name)) return;shops=shops.filter(x=>x.id!==id);quotes=quotes.filter(x=>x.shopId!==id);rates=rates.filter(x=>x.shopId!==id);custs=custs.filter(x=>x.shopId!==id);localStorage.removeItem(PFX+'draft_'+id);
@@ -591,6 +642,53 @@ function saveAll(){store('shops',shops);store('quotes',quotes);store('rates',rat
 function handleLogo(file){if(!file) return;const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const max=300,k=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*k)),h=Math.max(1,Math.round(img.height*k));const cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(img,0,0,w,h);shopLogo={logo:cv.toDataURL('image/jpeg',.88),w,h};URL.revokeObjectURL(url);renderLogoPrev($('shName').value)};img.src=url}
 function exportBackup(){const data={app:'KarigarMitra',v:3,at:new Date().toISOString(),shops,activeId,quotes,rates,custs,ctrades,lang};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download=`KarigarMitra_Backup_${todayISO()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 function importBackup(f){if(!f) return;const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!Array.isArray(d.shops)||!d.shops.length) throw 0;if(!confirm(t('restore')+'?')) return;shops=d.shops;quotes=d.quotes||[];rates=d.rates||[];custs=d.custs||[];ctrades=d.ctrades||[];shops.forEach(s=>{if(!Array.isArray(s.trades)) s.trades=s.trade?[s.trade]:['other']});activeId=shops.some(s=>s.id===d.activeId)?d.activeId:shops[0].id;saveAll();store('active',activeId);Q=null;editShopId=activeId;applyBrand();renderShopScreen();toast(t('restored'))}catch(e){toast(t('badFile'))}};rd.readAsText(f)}
+
+
+/* ==========================================================================
+   v6: THEMES · INSTALL BUTTON · ADMIN COUNTERS
+   ========================================================================== */
+/* ---- theme sheet ---- */
+function renderTheme(){const cur=(shop()||{}).color;const sw=c=>`<button class="sw ${c===cur?'on':''}" style="background:${c}" data-color="${c}" aria-label="${c}"></button>`;
+  $('thDark').innerHTML=DARK_COLORS.map(sw).join('');$('thLight').innerHTML=LIGHT_COLORS.map(sw).join('');$('thCustom').value=/^#[0-9a-f]{6}$/i.test(cur||'')?cur:'#1d4ed8'}
+function openTheme(){if(!shops.length) return;renderTheme();$('themeSheet').classList.add('on');document.body.style.overflow='hidden'}
+function closeTheme(){$('themeSheet').classList.remove('on');document.body.style.overflow=''}
+function setTheme(c,close=true){const s=shop();if(!s) return;s.color=c;store('shops',shops);applyBrand();renderTheme();if(curScreen==='shop') renderShopScreen();if(curScreen==='home') renderHome();if(close){setTimeout(closeTheme,180);toast(t('themeSaved'))}}
+
+/* ---- install button (visible until installed) ---- */
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+function updInstall(){$('instBtn').classList.toggle('hidden',isStandalone()||load('installed',false)===true)}
+async function doInstall(){if(deferredPrompt){deferredPrompt.prompt();const ch=await deferredPrompt.userChoice.catch(()=>({}));deferredPrompt=null;if(ch&&ch.outcome==='accepted'){store('installed',true);updInstall();toast(t('installed'))}}else $('instModal').classList.add('on')}
+
+/* ---- admin counters (server) ---- */
+const STATS_API=(typeof window.KM_STATS_API==='string')?window.KM_STATS_API.replace(/\/$/,''):'';
+const deviceId=load('dev',null)||(()=>{const d='d'+uid()+uid();store('dev',d);return d})();
+const shopEvent=(type,s)=>({type,shop_id:s.id,name:s.name,owner:s.owner||'',phone:s.phone||'',trades:(s.trades||[]).map(id=>trade(id).en).join(', '),address:s.address||''});
+let flushing=false;
+function track(ev){if(!STATS_API) return;const q=load('evq',[]);q.push({...ev,device:deviceId,lang:lang||'en',at:new Date().toISOString()});store('evq',q.slice(-1000));flushEvents()}
+async function flushEvents(){if(flushing||!STATS_API||navigator.onLine===false) return;const q=load('evq',[]);if(!q.length) return;flushing=true;
+  try{const r=await fetch(STATS_API+'/events',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({events:q.slice(0,300)})});
+    if(r.ok){const cur=load('evq',[]);store('evq',cur.slice(Math.min(300,q.length)))}}catch(e){}
+  flushing=false;if(load('evq',[]).length&&load('evq',[]).length<q.length) flushEvents()}
+function backfillOnce(){if(!STATS_API||load('bf6',false)) return;shops.forEach(s=>track(shopEvent('register',s)));quotes.forEach(x=>track({type:'quote',shop_id:x.shopId,quote_id:x.id,total:x.total||0,at:x.savedAt}));store('bf6',true)}
+let adminKey=sessionStorage.getItem('km_admin')||'',adminData=null,tapN=0,tapT=null;
+function titleTap(){if(curScreen!=='home') return;tapN++;clearTimeout(tapT);tapT=setTimeout(()=>tapN=0,1800);if(tapN>=5){tapN=0;openAdmin()}}
+function openAdmin(){if(!adminKey){const k=prompt('Admin key');if(!k) return;adminKey=k.trim()}go('admin');loadAdmin()}
+async function loadAdmin(){$('adNote').textContent='Loading…';
+  if(!STATS_API){adminData=null;$('adNote').textContent='Stats server is off – showing this phone only.';renderAdmin();return}
+  try{const r=await fetch(STATS_API+'/stats',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({key:adminKey})});
+    if(r.status===401||r.status===403){adminKey='';sessionStorage.removeItem('km_admin');toast('Wrong admin key');go('home',false);return}
+    if(!r.ok) throw new Error(r.status);adminData=await r.json();sessionStorage.setItem('km_admin',adminKey);$('adNote').textContent='All users · updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
+  catch(e){adminData=null;$('adNote').textContent='Server not reachable – showing this phone only.'}
+  renderAdmin()}
+function renderAdmin(){let list,tot;
+  if(adminData){list=adminData.businesses||[];tot=adminData.totals||{}}
+  else{const today=todayISO();list=shops.map(s=>{const qs=quotes.filter(q=>q.shopId===s.id);return {name:s.name,owner:s.owner,phone:s.phone,trades:(s.trades||[]).map(id=>trade(id).en).join(', '),quotes:qs.length,value:qs.reduce((a,q)=>a+n(q.total),0),created:'',last:qs[0]?.savedAt||''}});
+    tot={businesses:list.length,quotes:list.reduce((a,b)=>a+b.quotes,0),today:quotes.filter(q=>(q.savedAt||'').slice(0,10)===today).length}}
+  $('adTotals').innerHTML=`<div class="stat"><b>${fq(tot.businesses||0)}</b><span>🏪 Businesses</span></div><div class="stat"><b>${fq(tot.quotes||0)}</b><span>📄 Quotations</span></div><div class="stat"><b>${fq(tot.today||0)}</b><span>📅 Today</span></div>`;
+  const q=($('adSearch').value||'').toLowerCase().trim();
+  const rows=list.filter(b=>!q||[b.name,b.owner,b.phone,b.trades].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.quotes-a.quotes);
+  const d=v=>v?dmy(String(v).slice(0,10)):'–';
+  $('adList').innerHTML=rows.length?rows.map((b,i)=>`<div class="lc"><div class="top"><div style="min-width:0"><div class="t">${i+1}. ${esc(b.name||'—')}</div><div class="s">${esc([b.owner,b.phone].filter(Boolean).join(' · ')||'—')}</div><div class="s">${esc(b.trades||'')}</div><div class="s">Joined ${d(b.created)} · Last ${d(b.last)}${b.value?` · ${money(b.value)}`:''}</div></div><div class="qbadge">${fq(b.quotes||0)}<small>quotes</small></div></div></div>`).join(''):'<div class="empty">No businesses yet</div>'}
 
 /* ==========================================================================
    PDF ENGINE (A4, multi-page, English labels)
@@ -803,11 +901,20 @@ function bind(){
   $('shColors').onclick=e=>{const b=e.target.closest('[data-color]');if(!b) return;$('shColors').dataset.val=b.dataset.color;$('shColors').querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x===b))};
   $('shLogoFile').onchange=e=>{handleLogo(e.target.files[0]);e.target.value=''};$('shLogoDel').onclick=()=>{shopLogo={logo:'',w:0,h:0};renderLogoPrev($('shName').value)};
   $('bkExport').onclick=exportBackup;$('bkImport').onchange=e=>{importBackup(e.target.files[0]);e.target.value=''};
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
-  $('installBtn').onclick=async()=>{if(!deferredPrompt){toast(t('installTip'));return}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null};
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;store('installed',false);updInstall()});
+  window.addEventListener('appinstalled',()=>{store('installed',true);deferredPrompt=null;updInstall();toast(t('installed'))});
+  $('installBtn').onclick=doInstall;$('instBtn').onclick=doInstall;$('instClose').onclick=()=>$('instModal').classList.remove('on');
+  $('instModal').onclick=e=>{if(e.target.id==='instModal') $('instModal').classList.remove('on')};
+  $('themeBtn').onclick=openTheme;$('thClose').onclick=closeTheme;
+  ['thDark','thLight'].forEach(id=>$(id).onclick=e=>{const b=e.target.closest('[data-color]');if(b) setTheme(b.dataset.color)});
+  $('thCustom').oninput=e=>setTheme(e.target.value,false);$('thCustom').onchange=e=>setTheme(e.target.value,true);
+  $('hTitle').onclick=titleTap;
+  $('adSearch').oninput=renderAdmin;$('adRefresh').onclick=loadAdmin;$('adLogout').onclick=()=>{adminKey='';adminData=null;sessionStorage.removeItem('km_admin');go('home',false)};
+  window.addEventListener('online',flushEvents);
 }
 function init(){applyI18n();bind();
   if(!lang) showOb(1);else if(!shops.length) showOb(2);else{if(!shops.some(s=>s.id===activeId)){activeId=shops[0].id;store('active',activeId)}applyBrand();go('home',false)}
+  updInstall();backfillOnce();flushEvents();
   if('serviceWorker' in navigator&&location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 window.QDK={buildPdf,calcQuote,get Q(){return Q},shop};
 document.addEventListener('DOMContentLoaded',init,{once:true});
